@@ -6,6 +6,7 @@
   <title>Биржа Заданий</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
+    /* Все стили без изменений, оставлены как у вас */
     body { background: #0a0a0a; color: white; font-family: system-ui, sans-serif; overflow-x: hidden; }
     .neon-text-yellow { text-shadow: 0 0 8px #fbbf24, 0 0 16px #f59e0b; }
     .neon-text-green { text-shadow: 0 0 8px #4ade80, 0 0 16px #22c55e; }
@@ -48,6 +49,7 @@
   </div>
 
   <div class="max-w-md mx-auto pt-6 px-4 space-y-8">
+    <!-- Шапка с балансом -->
     <div class="flex items-center justify-between">
       <div class="flex items-center gap-3">
         <div class="w-10 h-10 bg-amber-400 text-black font-bold rounded-2xl flex items-center justify-center text-2xl shadow-[0_4px_0_#b88c0f] neon-border">Т</div>
@@ -62,11 +64,13 @@
       </div>
     </div>
 
+    <!-- Онлайн -->
     <div class="flex items-center gap-2 text-base text-emerald-300 font-medium">
       <div class="pulse-dot"></div>
       <span class="neon-text-green">Пользователей в онлайне: 9 684</span>
     </div>
 
+    <!-- Баннер с таймером -->
     <div class="card-neon p-5 bg-gradient-to-br from-emerald-600 to-teal-500 shadow-[0_10px_0_#0f4f3a,0_0_30px_#2ecc71]">
       <div class="flex justify-between">
         <div class="max-w-[180px]">
@@ -80,6 +84,7 @@
       </div>
     </div>
 
+    <!-- Последние выплаты -->
     <div>
       <div class="flex items-center gap-2 mb-4">
         <span class="text-3xl">💰</span>
@@ -88,6 +93,7 @@
       <div id="payouts" class="space-y-3"></div>
     </div>
 
+    <!-- Задания -->
     <div>
       <div class="flex items-center gap-3 mb-5">
         <span class="text-3xl">📋</span>
@@ -101,7 +107,6 @@
   <div id="modalOverlay" class="modal-overlay hidden" onclick="if(event.target===this) closeAllModals()">
     <!-- Выбор способа -->
     <div id="withdrawChoiceModal" class="modal-card relative hidden">
-      <!-- ... содержимое без изменений ... -->
       <div class="close-btn" onclick="closeAllModals()">✕</div>
       <div class="p-6">
         <div class="flex items-center gap-4 mb-6">
@@ -135,7 +140,6 @@
 
     <!-- На карту -->
     <div id="cardModal" class="modal-card relative hidden">
-      <!-- ... содержимое без изменений ... -->
       <div class="close-btn" onclick="closeAllModals()">✕</div>
       <div class="p-6">
         <div class="flex items-center gap-4 mb-6">
@@ -154,7 +158,6 @@
 
     <!-- Через СБП -->
     <div id="sbpModal" class="modal-card relative hidden">
-      <!-- ... содержимое без изменений ... -->
       <div class="close-btn" onclick="closeAllModals()">✕</div>
       <div class="p-6">
         <div class="flex items-center gap-4 mb-6">
@@ -179,13 +182,17 @@
 
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script>
+    // --- Данные пользователя и заданий ---
     let user = { id: 123456789, first_name: "Пользователь", balance: 12450, referralsCount: 0 };
     let tasks = [
       { id: 1, title: "Поставить лайки", reward: 150, max: 1, progress: 0, iconBg: "bg-blue-500", icon: "https://cdn-icons-png.flaticon.com/512/126/126473.png", type: "simple" },
-      { id: 2, title: "Подписаться", reward: 350, max: 2, progress: 0, iconBg: "bg-pink-500", icon: "https://cdn-icons-png.flaticon.com/512/733/733553.png", type: "subscribe", link: "https://t.me/durov", channel: "@durov" },
+      { id: 2, title: "Подписаться", reward: 350, max: 2, progress: 0, iconBg: "bg-pink-500", icon: "https://cdn-icons-png.flaticon.com/512/733/733553.png", type: "subscribe", link: "https://t.me/+rvjfW6GNbec0ODYy" }, // ← ссылка на ваш канал
       { id: 4, title: "Просмотр рекламы", reward: 750, max: 2, progress: 0, iconBg: "bg-purple-500", icon: "https://cdn-icons-png.flaticon.com/512/1089/1089585.png", type: "simple" },
       { id: 5, title: "Пригласить друзей", reward: 12300, max: 10, progress: 0, iconBg: "bg-amber-500", icon: "https://cdn-icons-png.flaticon.com/512/2920/2920123.png", type: "referral", vip: true }
     ];
+
+    // --- Таймаут для запросов к боту ---
+    let balanceRequestTimeout = null;
 
     // --- Вспомогательные функции ---
     function showLoading(text = "Проверяем...") {
@@ -194,9 +201,13 @@
     }
     function hideLoading() {
       document.getElementById('loadingOverlay').style.display = 'none';
+      if (balanceRequestTimeout) {
+        clearTimeout(balanceRequestTimeout);
+        balanceRequestTimeout = null;
+      }
     }
 
-    // --- Работа с данными ---
+    // --- Работа с данными (localStorage) ---
     function saveData() {
       try { localStorage.setItem("birzha_tasks", JSON.stringify({user, tasks})); } catch(e) {}
     }
@@ -221,15 +232,19 @@
     // --- Обработка ответов от бота (webAppData) ---
     function setupWebAppDataHandler() {
       Telegram.WebApp.onEvent('webAppData', function(data) {
-        hideLoading();
+        hideLoading(); // скрываем загрузку при любом ответе
         try {
           const response = JSON.parse(data);
+          console.log('Ответ бота:', response);
+
           if (response.action === 'get_balance') {
-            // Пришёл баланс при загрузке
+            // Обновляем баланс из ответа бота
             user.balance = response.balance;
             document.getElementById("balanceTop").textContent = user.balance + " ₽";
             saveData();
-          } else if (response.success) {
+            Telegram.WebApp.showAlert(`Баланс загружен: ${user.balance} ₽`);
+          } 
+          else if (response.success) {
             // Успешное выполнение задания
             user.balance = response.new_balance;
             document.getElementById("balanceTop").textContent = user.balance + " ₽";
@@ -241,25 +256,32 @@
               saveData();
             }
             Telegram.WebApp.showAlert(`✅ Задание выполнено! +${response.reward} ₽`);
-          } else {
-            // Ошибка
-            Telegram.WebApp.showAlert(`❌ ${response.message}`);
+          } 
+          else {
+            // Ошибка от бота
+            Telegram.WebApp.showAlert(`❌ ${response.message || 'Ошибка'}`);
           }
         } catch (e) {
           console.error('Ошибка обработки ответа бота', e);
+          Telegram.WebApp.showAlert('Ошибка при обработке ответа');
         }
       });
     }
 
     // --- Отправка запроса баланса при загрузке ---
     function requestBalance() {
-      // Отправляем боту запрос на получение баланса
       const data = JSON.stringify({
         action: 'get_balance',
         user_id: user.id
       });
       Telegram.WebApp.sendData(data);
       showLoading("Загружаем баланс...");
+
+      // Таймаут на случай, если бот не ответит
+      balanceRequestTimeout = setTimeout(() => {
+        hideLoading();
+        Telegram.WebApp.showAlert('Бот не отвечает. Используется сохранённый баланс.');
+      }, 5000);
     }
 
     // --- Функции для заданий ---
@@ -272,10 +294,7 @@
         buttons: [{type:"default", text:"Проверить", id:"check"}, {type:"cancel"}]
       }, (btnId) => {
         if (btnId === "check") {
-          // Отправляем запрос боту на проверку простого задания (можно тоже реализовать)
-          // Для простоты пока оставим локальную имитацию (или тоже через бота)
-          // Здесь можно добавить sendData с action 'check_simple'
-          // Но для примера оставим как было
+          // Здесь можно отправить запрос боту, но пока оставим локальную имитацию
           showLoading("Проверяем...");
           setTimeout(() => {
             hideLoading();
@@ -309,12 +328,11 @@
               buttons: [{type:"default", text:"Проверить", id:"check"}, {type:"cancel"}]
             }, (c) => {
               if (c === "check") {
-                // Отправляем запрос боту на проверку подписки
+                // Отправляем запрос боту на проверку подписки (без channel, бот сам знает)
                 const data = JSON.stringify({
                   action: "check_subscribe",
                   task_id: t.id,
-                  user_id: user.id,
-                  channel: t.channel  // можно передать username канала
+                  user_id: user.id
                 });
                 Telegram.WebApp.sendData(data);
                 showLoading("Проверяем подписку...");
@@ -341,10 +359,9 @@
       });
     }
 
-    // --- Рендер и обновления ---
+    // --- Рендер выплат и заданий ---
     function renderPayouts() {
-      // ... (без изменений)
-      const payoutsData = generatePayouts(); // функция generatePayouts должна быть определена (из предыдущего кода)
+      const payoutsData = generatePayouts();
       document.getElementById("payouts").innerHTML = payoutsData.map(p => `
         <div class="payouts-card flex justify-between items-center">
           <div><div class="text-emerald-300 font-bold text-lg">Вывод средств</div><div class="text-zinc-400 text-sm">${p.mask}</div></div>
@@ -354,7 +371,6 @@
     }
 
     function generatePayouts() {
-      // ... (та же функция, что и раньше)
       const firstNames = ['М','А','С','Н','Д','Е','К','И','В','О'];
       const lastNames = ['П','С','К','Н','В','М','Л','Ф','Г','Т'];
       function randomMask() {
@@ -399,7 +415,7 @@
       }).join('');
     }
 
-    // --- Таймер и модалки вывода (без изменений) ---
+    // --- Таймер акции ---
     function updateTimer() {
       const end = new Date(2026,1,28,23,59,59);
       const diff = end - new Date();
@@ -412,6 +428,7 @@
     }
     setInterval(updateTimer, 1000);
 
+    // --- Модалки вывода (без изменений) ---
     function showWithdrawModal() {
       document.getElementById('modalOverlay').classList.remove('hidden');
       document.getElementById('withdrawChoiceModal').classList.remove('hidden');
@@ -461,7 +478,7 @@
       renderTasks();
       updateTimer();
       // Запрашиваем актуальный баланс у бота
-      setTimeout(() => requestBalance(), 500); // небольшая задержка, чтобы обработчик точно успел зарегистрироваться
+      setTimeout(() => requestBalance(), 500);
     };
   </script>
 </body>
