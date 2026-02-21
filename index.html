@@ -6,12 +6,181 @@
   <title>Биржа Заданий</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    /* все ваши стили без изменений (оставьте как есть) */
+    body { background: #0a0a0a; color: white; font-family: system-ui, sans-serif; overflow-x: hidden; }
+    .neon-text-yellow { text-shadow: 0 0 8px #fbbf24, 0 0 16px #f59e0b; }
+    .neon-text-green { text-shadow: 0 0 8px #4ade80, 0 0 16px #22c55e; }
+    .neon-border { box-shadow: 0 0 10px #fbbf24, 0 0 20px rgba(251,191,36,0.4); }
+    .card-neon { background: #1a1a1a; border-radius: 28px; border: 1px solid rgba(255,215,0,0.2); box-shadow: 0 8px 0 #0f0f0f, 0 0 20px rgba(250,204,21,0.3); }
+    .icon-box { width: 68px; height: 68px; border-radius: 22px; display: flex; align-items: center; justify-content: center; background: #2d2d2d; box-shadow: 0 0 15px rgba(255,200,50,0.6); overflow: hidden; }
+    .btn-neon { background: #f97316; color: black; font-weight: 700; box-shadow: 0 6px 0 #b45309, 0 0 20px #f97316, 0 0 40px #f97316; animation: neonPulse 1.8s ease-in-out infinite; }
+    .btn-neon:active { transform: translateY(4px); box-shadow: 0 2px 0 #b45309, 0 0 20px #f97316; }
+    .btn-neon.disabled { opacity: 0.5; pointer-events: none; animation: none !important; }
+    @keyframes neonPulse { 0%,100% { box-shadow: 0 6px 0 #b45309, 0 0 20px #f97316, 0 0 40px #f97316; } 50% { box-shadow: 0 6px 0 #b45309, 0 0 45px #f97316, 0 0 90px #f97316; } }
+    .pulse-dot { width: 12px; height: 12px; background: #4ade80; border-radius: 50%; box-shadow: 0 0 15px #4ade80; animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0% { opacity: 0.8; transform: scale(1); } 50% { opacity: 1; transform: scale(1.2); box-shadow: 0 0 25px #4ade80; } 100% { opacity: 0.8; transform: scale(1); } }
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 16px; }
+    .modal-card { background: #1f1f1f; border-radius: 40px; width: 100%; max-width: 420px; border: 1px solid #333; box-shadow: 0 20px 40px rgba(0,0,0,0.9); position: relative; }
+    .modal-option { background: #2d2d2d; border-radius: 30px; padding: 20px; margin-bottom: 16px; display: flex; align-items: center; gap: 16px; font-size: 20px; font-weight: 500; border: 1px solid #f97316; box-shadow: 0 4px 0 #0a0a0a, 0 0 15px #f97316; }
+    .modal-option:active { transform: translateY(4px); box-shadow: 0 0 15px #f97316; }
+    .withdraw-input-wrapper { background: #27272a; border-radius: 28px; padding: 22px 24px; margin-bottom: 16px; }
+    .withdraw-input { background: transparent; border: none; outline: none; font-size: 24px; width: 100%; color: white; font-family: monospace; }
+    .green-btn { background: #22c55e; color: #000; font-weight: 700; font-size: 24px; padding: 22px; border-radius: 9999px; box-shadow: 0 6px 0 #15803d; width: 100%; }
+    .green-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #15803d; }
+    .close-btn { position: absolute; top: 20px; right: 20px; width: 44px; height: 44px; background: #333; border-radius: 30px; display: flex; align-items: center; justify-content: center; font-size: 26px; color: #ffd966; cursor: pointer; border: 1px solid #f97316; }
+    .payouts-card { background: #202020; border-radius: 24px; padding: 16px; border-left: 6px solid #f97316; box-shadow: 0 6px 0 #0f0f0f, 0 0 15px #f97316; }
+    .task-right { display: flex; flex-direction: column; align-items: flex-end; justify-content: center; gap: 8px; }
+    .task-price { font-size: 32px; font-weight: 800; color: #4ade80; text-shadow: 0 0 8px #4ade80, 0 0 16px #22c55e; line-height: 1; }
+    .task-btn { min-width: 140px; text-align: center; border-radius: 40px; padding: 12px 16px; font-weight: 700; font-size: 18px; }
+    .task-card { background: #1a1a1a; border-radius: 28px; padding: 16px; display: flex; align-items: center; gap: 16px; box-shadow: 0 8px 0 #0f0f0f, 0 0 20px rgba(249,115,22,0.4); border: 1px solid rgba(249,115,22,0.3); }
+    .task-info { flex: 1; }
+    .task-title { font-weight: 700; font-size: 20px; color: white; text-shadow: 0 0 5px #fbbf24; }
+    .task-progress { color: #a0a0a0; font-size: 14px; margin-top: 4px; }
+    .vip-border { border: 3px solid #f97316; box-shadow: 0 0 25px #f97316; }
+    #loadingOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; align-items: center; justify-content: center; z-index: 2000; }
+    .video-modal { width: 100%; max-width: 500px; background: #1f1f1f; border-radius: 40px; padding: 20px; }
+    .video-container { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 20px; }
+    .video-container video, .video-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
   </style>
 </head>
-<body>
-  <!-- разметка без изменений (оставьте как есть) -->
-  <div class="max-w-md mx-auto pt-6 px-4 space-y-8">...</div>
+<body class="min-h-screen pb-10">
+  <div id="loadingOverlay">
+    <div class="text-center">
+      <div class="text-5xl mb-4 text-emerald-400 animate-spin">🔄</div>
+      <div class="text-2xl font-bold text-white neon-text-green" id="loadingText">Проверяем...</div>
+    </div>
+  </div>
+
+  <div class="max-w-md mx-auto pt-6 px-4 space-y-8">
+    <!-- Шапка с балансом -->
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 bg-amber-400 text-black font-bold rounded-2xl flex items-center justify-center text-2xl shadow-[0_4px_0_#b88c0f] neon-border">Т</div>
+        <div>
+          <div class="font-semibold text-3xl text-white">Привет, <span id="userName" class="text-amber-300 neon-text-yellow">Пользователь</span> 👋</div>
+          <div class="text-amber-400 text-base font-medium neon-text-yellow">Рад тебя видеть ❤️</div>
+        </div>
+      </div>
+      <div onclick="showWithdrawModal()" class="bg-zinc-900 border-2 border-emerald-400 text-emerald-300 px-5 py-2 rounded-3xl font-bold flex items-center gap-2 shadow-[0_6px_0_#0a3f1f] neon-text-green cursor-pointer active:scale-95">
+        <span class="text-3xl">💰</span>
+        <span id="balanceTop" class="text-2xl">0 ₽</span>
+      </div>
+    </div>
+
+    <!-- Онлайн -->
+    <div class="flex items-center gap-2 text-base text-emerald-300 font-medium">
+      <div class="pulse-dot"></div>
+      <span class="neon-text-green">Пользователей в онлайне: 9 684</span>
+    </div>
+
+    <!-- Баннер с таймером -->
+    <div class="card-neon p-5 bg-gradient-to-br from-emerald-600 to-teal-500 shadow-[0_10px_0_#0f4f3a,0_0_30px_#2ecc71]">
+      <div class="flex justify-between">
+        <div class="max-w-[180px]">
+          <div class="font-bold text-3xl text-white drop-shadow-lg neon-text-yellow">Счастливые дни!</div>
+          <div class="text-2xl text-white font-semibold neon-text-yellow">Зимние каникулы +15%</div>
+          <div class="mt-4 bg-black/40 text-white text-base px-5 py-3 rounded-2xl inline-block border border-amber-300 font-mono shadow-inner neon-border" id="timerDisplay">
+            10д : 02ч : 42м : 29с
+          </div>
+        </div>
+        <div class="text-8xl -mt-3 drop-shadow-2xl">📅</div>
+      </div>
+    </div>
+
+    <!-- Последние выплаты -->
+    <div>
+      <div class="flex items-center gap-2 mb-4">
+        <span class="text-3xl">💰</span>
+        <span class="font-bold text-2xl text-amber-300 neon-text-yellow">Последние выплаты</span>
+      </div>
+      <div id="payouts" class="space-y-3"></div>
+    </div>
+
+    <!-- Задания -->
+    <div>
+      <div class="flex items-center gap-3 mb-5">
+        <span class="text-3xl">📋</span>
+        <span class="font-bold text-2xl text-amber-300 neon-text-yellow">Доступные задания</span>
+      </div>
+      <div id="tasks-container" class="space-y-5"></div>
+    </div>
+  </div>
+
+  <!-- МОДАЛКИ ВЫВОДА -->
+  <div id="modalOverlay" class="modal-overlay hidden" onclick="if(event.target===this) closeAllModals()">
+    <!-- Выбор способа -->
+    <div id="withdrawChoiceModal" class="modal-card relative hidden">
+      <div class="close-btn" onclick="closeAllModals()">✕</div>
+      <div class="p-6">
+        <div class="flex items-center gap-4 mb-6">
+          <div class="w-12 h-12 bg-zinc-800 rounded-3xl flex items-center justify-center text-4xl">💸</div>
+          <div>
+            <div class="text-3xl font-bold">Вывод денег</div>
+            <div class="text-zinc-400">Выберите способ вывода</div>
+          </div>
+        </div>
+        <div onclick="showCardModal()" class="modal-option cursor-pointer">
+          <div class="w-16 h-12 bg-gradient-to-r from-blue-400 to-amber-400 rounded-2xl flex items-center justify-center">
+            <div class="w-11 h-7 bg-white rounded-xl"></div>
+          </div>
+          <div class="text-2xl font-semibold">На карту</div>
+        </div>
+        <div onclick="showSBPModal()" class="modal-option cursor-pointer">
+          <div class="w-16 h-12 flex items-center justify-center">
+            <div class="w-14 h-14 relative">
+              <div class="absolute inset-0 bg-gradient-to-br from-emerald-400 via-cyan-400 to-blue-500" style="clip-path: polygon(50% 15%, 88% 82%, 12% 82%);"></div>
+              <div class="absolute inset-0 flex items-center justify-center text-white text-xs font-black">СБП</div>
+            </div>
+          </div>
+          <div class="text-2xl font-semibold">Через СБП</div>
+        </div>
+      </div>
+      <div class="mx-6 mb-8 bg-emerald-900/40 border border-emerald-500/40 rounded-3xl p-5 text-sm">
+        <div class="flex items-center gap-3 text-emerald-300"><span class="text-3xl">🕒</span> Выплата: доступно 24/7</div>
+        <div class="flex items-center gap-3 text-emerald-300 mt-3"><span class="text-3xl">🛡️</span> Автоматически: без оператора</div>
+      </div>
+    </div>
+
+    <!-- На карту -->
+    <div id="cardModal" class="modal-card relative hidden">
+      <div class="close-btn" onclick="closeAllModals()">✕</div>
+      <div class="p-6">
+        <div class="flex items-center gap-4 mb-6">
+          <div class="w-12 h-10 bg-gradient-to-br from-blue-400 to-amber-300 rounded-2xl flex items-center justify-center">💳</div>
+          <div class="text-3xl font-bold">Вывод на карту</div>
+        </div>
+        <div class="withdraw-input-wrapper">
+          <input id="cardNumber" type="text" maxlength="19" class="withdraw-input" value="" placeholder="0000 0000 0000 0000">
+        </div>
+        <div class="withdraw-input-wrapper">
+          <input id="cardSum" type="number" class="withdraw-input" value="" placeholder="Сумма вывода (₽)">
+        </div>
+        <button onclick="processWithdraw('card')" class="green-btn">Вывести</button>
+      </div>
+    </div>
+
+    <!-- Через СБП -->
+    <div id="sbpModal" class="modal-card relative hidden">
+      <div class="close-btn" onclick="closeAllModals()">✕</div>
+      <div class="p-6">
+        <div class="flex items-center gap-4 mb-6">
+          <div class="w-12 h-12 flex items-center justify-center">
+            <div class="w-14 h-14 relative">
+              <div class="absolute inset-0 bg-gradient-to-br from-emerald-400 via-cyan-400 to-blue-500" style="clip-path: polygon(50% 15%, 88% 82%, 12% 82%);"></div>
+              <div class="absolute inset-0 flex items-center justify-center text-white text-xs font-black">СБП</div>
+            </div>
+          </div>
+          <div class="text-3xl font-bold">Вывод через СБП</div>
+        </div>
+        <div class="withdraw-input-wrapper">
+          <input id="phoneNumber" type="tel" class="withdraw-input" value="+7 " placeholder="+7 ___ ___ __ __">
+        </div>
+        <div class="withdraw-input-wrapper">
+          <input id="sbpSum" type="number" class="withdraw-input" value="" placeholder="Сумма вывода (₽)">
+        </div>
+        <button onclick="processWithdraw('sbp')" class="green-btn">Вывести</button>
+      </div>
+    </div>
+  </div>
 
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script>
@@ -27,7 +196,7 @@
         iconBg: "bg-blue-500", 
         icon: "https://cdn-icons-png.flaticon.com/512/126/126473.png", 
         type: "like", 
-        postLink: "https://t.me/durov/123"  // замените на реальный пост
+        postLink: "https://t.me/durov/123"  // ЗАМЕНИТЕ на реальный пост
       },
       { 
         id: 2, 
@@ -38,7 +207,7 @@
         iconBg: "bg-pink-500", 
         icon: "https://cdn-icons-png.flaticon.com/512/733/733553.png", 
         type: "subscribe", 
-        link: "https://t.me/+rvjfW6GNbec0ODYy"   // ваша ссылка на канал
+        link: "https://t.me/+rvjfW6GNbec0ODYy"   // ВАША ССЫЛКА НА КАНАЛ
       },
       { 
         id: 4, 
@@ -133,16 +302,17 @@
       });
     }
 
+    // Отправка запроса боту с увеличенным таймаутом
     function sendBotRequest(data, loadingText = "Проверяем...") {
       Telegram.WebApp.sendData(JSON.stringify(data));
       showLoading(loadingText);
       pendingResponseTimeout = setTimeout(() => {
         hideLoading();
         Telegram.WebApp.showAlert('Бот не отвечает. Попробуйте позже.');
-      }, 20000); // таймаут 20 секунд
+      }, 20000); // 20 секунд
     }
 
-    // --- Задание "Подписаться на канал" (новая версия с двумя кнопками) ---
+    // --- Задание "Подписаться на канал" (НОВОЕ МЕНЮ) ---
     function startSubscribeCheck(id) {
       const t = tasks.find(x => x.id === id);
       if (!t || t.progress >= t.max) return;
@@ -168,7 +338,7 @@
       });
     }
 
-    // --- Задание "Поставить лайки" (можно оставить как есть) ---
+    // --- Задание "Поставить лайки" (аналогичное меню) ---
     function startLikeTask(id) {
       const t = tasks.find(x => x.id === id);
       if (!t || t.progress >= t.max) return;
@@ -176,8 +346,8 @@
         title: t.title,
         message: `Перейди к посту и поставь лайк:\n\n${t.postLink}\n\nПосле нажми "Проверить"`,
         buttons: [
-          { type: "default", text: "Перейти к посту", id: "open" },
-          { type: "default", text: "Проверить", id: "check" },
+          { type: "default", text: "🔗 Перейти к посту", id: "open" },
+          { type: "default", text: "✅ Проверить", id: "check" },
           { type: "cancel" }
         ]
       }, (btnId) => {
@@ -236,7 +406,7 @@
     function showReferral(id) {
       const t = tasks.find(x => x.id === id);
       if (!t || t.progress >= t.max) return;
-      const link = `https://t.me/fjsfjsofjosfjosjfos_bot?start=${user.id}`; // замените на юзернейм вашего бота
+      const link = `https://t.me/fjsfjsofjosfjosjfos_bot?start=${user.id}`; // ЗАМЕНИТЕ на юзернейм вашего бота
       Telegram.WebApp.showPopup({
         title: "Пригласи друзей",
         message: `Твоя ссылка:\n${link}\n\nКаждый друг = +1`,
@@ -252,8 +422,33 @@
       });
     }
 
-    // --- Рендер выплат и заданий (без изменений) ---
-    function renderPayouts() { /* как было */ }
+    // --- Последние выплаты (рендер) ---
+    function renderPayouts() {
+      const payoutsData = generatePayouts();
+      document.getElementById("payouts").innerHTML = payoutsData.map(p => `
+        <div class="payouts-card flex justify-between items-center">
+          <div><div class="text-emerald-300 font-bold text-lg">Вывод средств</div><div class="text-zinc-400 text-sm">${p.mask}</div></div>
+          <div class="text-right"><div class="font-bold text-2xl text-emerald-300 neon-text-green">${p.sum} ₽</div><div class="text-xs text-zinc-500">${p.time}</div></div>
+        </div>
+      `).join('');
+    }
+
+    function generatePayouts() {
+      const firstNames = ['М','А','С','Н','Д','Е','К','И','В','О'];
+      const lastNames = ['П','С','К','Н','В','М','Л','Ф','Г','Т'];
+      function randomMask() {
+        const f = firstNames[Math.floor(Math.random()*firstNames.length)];
+        const l = lastNames[Math.floor(Math.random()*lastNames.length)];
+        return `${f}${'****'.substring(0,Math.floor(Math.random()*3)+3)} ${l}${'******'.substring(0,Math.floor(Math.random()*4)+4)}`;
+      }
+      function randomSum() { return Math.floor(Math.random()*(22000-3000+1))+3000; }
+      function randomTime() {
+        const d = new Date(Date.now() - Math.floor(Math.random()*60)*60000);
+        return `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+      }
+      return Array.from({length:4}, () => ({mask:randomMask(), sum:randomSum(), time:randomTime()}));
+    }
+
     function renderTasks() {
       const cont = document.getElementById("tasks-container");
       cont.innerHTML = tasks.map(t => {
@@ -297,12 +492,43 @@
     }
     setInterval(updateTimer, 1000);
 
-    // --- Модалки вывода (без изменений) ---
-    function showWithdrawModal() { /* как было */ }
-    function showCardModal() { /* как было */ }
-    function showSBPModal() { /* как было */ }
-    function closeAllModals() { /* как было */ }
-    function processWithdraw(method) { /* как было */ }
+    // --- Модалки вывода ---
+    function showWithdrawModal() {
+      document.getElementById('modalOverlay').classList.remove('hidden');
+      document.getElementById('withdrawChoiceModal').classList.remove('hidden');
+      document.getElementById('cardModal').classList.add('hidden');
+      document.getElementById('sbpModal').classList.add('hidden');
+    }
+    function showCardModal() {
+      document.getElementById('withdrawChoiceModal').classList.add('hidden');
+      document.getElementById('cardModal').classList.remove('hidden');
+      setTimeout(() => document.getElementById('cardNumber').focus(), 100);
+    }
+    function showSBPModal() {
+      document.getElementById('withdrawChoiceModal').classList.add('hidden');
+      document.getElementById('sbpModal').classList.remove('hidden');
+      setTimeout(() => {
+        const phone = document.getElementById('phoneNumber');
+        phone.focus();
+        phone.setSelectionRange(3, 3);
+      }, 100);
+    }
+    function closeAllModals() {
+      document.getElementById('modalOverlay').classList.add('hidden');
+      document.getElementById('withdrawChoiceModal').classList.add('hidden');
+      document.getElementById('cardModal').classList.add('hidden');
+      document.getElementById('sbpModal').classList.add('hidden');
+    }
+    function processWithdraw(method) {
+      let sum = parseFloat(method === 'card' ? document.getElementById('cardSum').value : document.getElementById('sbpSum').value);
+      if (isNaN(sum) || sum < 100) { Telegram.WebApp.showAlert("Минимальная сумма 100 ₽"); return; }
+      if (sum > user.balance) { Telegram.WebApp.showAlert("Недостаточно средств"); return; }
+      user.balance -= sum;
+      document.getElementById("balanceTop").textContent = user.balance + " ₽";
+      saveData();
+      Telegram.WebApp.showAlert(`✅ Выведено ${sum} ₽`);
+      closeAllModals();
+    }
 
     // --- Инициализация ---
     window.onload = () => {
