@@ -6,7 +6,7 @@
   <title>Биржа Заданий</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    /* Стили (без изменений, можно оставить как есть) */
+    /* Все стили без изменений */
     body { background: #0a0a0a; color: white; font-family: system-ui, sans-serif; overflow-x: hidden; }
     .neon-text-yellow { text-shadow: 0 0 8px #fbbf24, 0 0 16px #f59e0b; }
     .neon-text-green { text-shadow: 0 0 8px #4ade80, 0 0 16px #22c55e; }
@@ -52,7 +52,7 @@
   </div>
 
   <div class="max-w-md mx-auto pt-6 px-4 space-y-8">
-    <!-- Шапка -->
+    <!-- Шапка с балансом -->
     <div class="flex items-center justify-between">
       <div class="flex items-center gap-3">
         <div class="w-10 h-10 bg-amber-400 text-black font-bold rounded-2xl flex items-center justify-center text-2xl shadow-[0_4px_0_#b88c0f] neon-border">Т</div>
@@ -106,7 +106,7 @@
     </div>
   </div>
 
-  <!-- МОДАЛКИ ВЫВОДА (полностью идентичны предыдущим версиям) -->
+  <!-- МОДАЛКИ ВЫВОДА (без изменений) -->
   <div id="modalOverlay" class="modal-overlay hidden" onclick="if(event.target===this) closeAllModals()">
     <!-- Выбор способа -->
     <div id="withdrawChoiceModal" class="modal-card relative hidden">
@@ -197,7 +197,7 @@
         iconBg: "bg-blue-500", 
         icon: "https://cdn-icons-png.flaticon.com/512/126/126473.png", 
         type: "like", 
-        postLink: "https://t.me/durov/123"  // ЗАМЕНИТЕ на ссылку на пост
+        postLink: "https://t.me/durov/123"  // ЗАМЕНИТЕ на реальный пост
       },
       { 
         id: 2, 
@@ -219,7 +219,7 @@
         iconBg: "bg-purple-500", 
         icon: "https://cdn-icons-png.flaticon.com/512/1089/1089585.png", 
         type: "video", 
-        videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ"  // ЗАМЕНИТЕ на ссылку на видео
+        videoUrl: "https://vk.com/video_ext.php?oid=831736216&id=456242196&hash=0e6c12ea71baefb7"  // ← новая ссылка ВК
       },
       { 
         id: 5, 
@@ -388,8 +388,8 @@
         <div class="close-btn" onclick="closeVideoModal()">✕</div>
         <div class="text-2xl font-bold mb-4">${t.title}</div>
         <div class="video-container">
-          ${t.videoUrl.includes('youtube') 
-            ? `<iframe src="${t.videoUrl}" allowfullscreen></iframe>` 
+          ${t.videoUrl.includes('youtube') || t.videoUrl.includes('vk.com') || t.videoUrl.includes('vkvideo.ru')
+            ? `<iframe src="${t.videoUrl}" allowfullscreen></iframe>`
             : `<video src="${t.videoUrl}" controls autoplay></video>`}
         </div>
         <button onclick="checkVideoTask(${id})" class="green-btn mt-4">Проверить</button>
@@ -502,7 +502,7 @@
     }
     setInterval(updateTimer, 1000);
 
-    // --- Модалки вывода (полные функции) ---
+    // --- Модалки вывода ---
     function showWithdrawModal() {
       document.getElementById('modalOverlay').classList.remove('hidden');
       document.getElementById('withdrawChoiceModal').classList.remove('hidden');
