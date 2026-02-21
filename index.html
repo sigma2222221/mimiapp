@@ -598,7 +598,8 @@
       user.balance -= sum;
       document.getElementById("balanceTop").textContent = user.balance + " ₽";
       saveData();
-      Telegram.WebApp.showAlert(`✅ Выведено ${sum} ₽`);
+      // ИЗМЕНЁННЫЙ ТЕКСТ:
+      Telegram.WebApp.showAlert(`✅ Заявка на выплату отправлена! 💸`);
       closeAllModals();
     }
 
