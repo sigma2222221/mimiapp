@@ -6,6 +6,7 @@
   <title>Биржа Заданий</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
+    /* Все стили без изменений (оставлены как в вашем коде) */
     body { background: #0a0a0a; color: white; font-family: system-ui, sans-serif; overflow-x: hidden; }
     .neon-text-yellow { text-shadow: 0 0 8px #fbbf24, 0 0 16px #f59e0b; }
     .neon-text-green { text-shadow: 0 0 8px #4ade80, 0 0 16px #22c55e; }
@@ -110,7 +111,7 @@
     </div>
   </div>
 
-  <!-- МОДАЛКИ ВЫВОДА -->
+  <!-- МОДАЛКИ ВЫВОДА (без изменений) -->
   <div id="modalOverlay" class="modal-overlay hidden" onclick="if(event.target===this) closeAllModals()">
     <!-- Выбор способа -->
     <div id="withdrawChoiceModal" class="modal-card relative hidden">
@@ -207,7 +208,7 @@
         iconBg: "bg-blue-500", 
         icon: "https://cdn-icons-png.flaticon.com/512/126/126473.png", 
         type: "like", 
-        postLink: "https://t.me/edkar_kick/624"
+        postLink: "https://t.me/durov/472"   // ← ссылка изменена
       },
       { 
         id: 2, 
@@ -229,7 +230,7 @@
         iconBg: "bg-purple-500", 
         icon: "https://cdn-icons-png.flaticon.com/512/1089/1089585.png", 
         type: "video", 
-        videoUrl: "https://github.com/sigma2222221/mimiapp/raw/refs/heads/main/2026-02-19%2015-45-56.mp4"  // прямая ссылка на ваше видео
+        videoUrl: "https://github.com/sigma2222221/mimiapp/raw/refs/heads/main/2026-02-19%2015-45-56.mp4"  // прямая ссылка на видео
       },
       { 
         id: 5, 
@@ -262,22 +263,9 @@
       }
     }
 
-    function saveData() {
-      try {
-        localStorage.setItem("birzha_tasks", JSON.stringify({ user, tasks }));
-      } catch(e) {}
-    }
+    // ✂️ УДАЛЕНЫ функции saveData и loadData – данные не сохраняются
 
-    function loadData() {
-      try {
-        const saved = localStorage.getItem("birzha_tasks");
-        if (saved) {
-          const d = JSON.parse(saved);
-          if (d.user) user = d.user;
-          if (d.tasks) tasks = d.tasks;
-        }
-      } catch(e) {}
-
+    function loadUserFromTelegram() {
       if (window.Telegram?.WebApp?.initDataUnsafe?.user) {
         const u = Telegram.WebApp.initDataUnsafe.user;
         user.id = u.id;
@@ -287,7 +275,7 @@
       document.getElementById("balanceTop").textContent = user.balance + " ₽";
     }
 
-    // ==================== ОБРАБОТКА ОТВЕТОВ ОТ БОТА ====================
+    // ==================== ОБРАБОТКА ОТВЕТОВ ОТ БОТА (только для рефералов и видео) ====================
     function setupWebAppDataHandler() {
       Telegram.WebApp.onEvent('webAppData', function(data) {
         hideLoading();
@@ -298,7 +286,6 @@
           if (response.action === 'get_balance') {
             user.balance = response.balance;
             document.getElementById("balanceTop").textContent = user.balance + " ₽";
-            saveData();
             Telegram.WebApp.showAlert(`Баланс загружен: ${user.balance} ₽`);
           } 
           else if (response.action === 'check_referrals') {
@@ -312,7 +299,6 @@
                 user.referralsCount = newCount;
                 task.progress = newCount;
                 document.getElementById("balanceTop").textContent = user.balance + " ₽";
-                saveData();
                 renderTasks();
                 Telegram.WebApp.showAlert(`✅ +${reward} ₽ за новых друзей!`);
               } else {
@@ -327,7 +313,6 @@
             if (t && t.progress < t.max) {
               t.progress++;
               renderTasks();
-              saveData();
             }
             Telegram.WebApp.showAlert(`✅ Задание выполнено! +${response.reward} ₽`);
           } 
@@ -369,15 +354,12 @@
         if (btnId === "open") {
           window.open(t.link, "_blank");
         } else if (btnId === "check") {
-          // Имитация проверки в течение 3 секунд
           showLoading("Проверяем подписку...");
           setTimeout(() => {
             hideLoading();
-            // Начисляем награду локально (без бота)
             user.balance += t.reward;
             t.progress++;
             document.getElementById("balanceTop").textContent = user.balance + " ₽";
-            saveData();
             renderTasks();
             Telegram.WebApp.showAlert(`✅ Подписка подтверждена! +${t.reward} ₽`);
           }, 3000);
@@ -385,7 +367,7 @@
       });
     }
 
-    // --- Лайки (через бота) ---
+    // --- Лайки (теперь тоже локально, 3 секунды) ---
     function startLikeTask(id) {
       const t = tasks.find(x => x.id === id);
       if (!t || t.progress >= t.max) return;
@@ -401,26 +383,28 @@
         if (btnId === "open") {
           window.open(t.postLink, "_blank");
         } else if (btnId === "check") {
-          sendBotRequest({
-            action: "check_like",
-            task_id: t.id,
-            user_id: user.id
-          }, "Проверяем лайк...");
+          // Имитация проверки 3 секунды
+          showLoading("Проверяем лайк...");
+          setTimeout(() => {
+            hideLoading();
+            user.balance += t.reward;
+            t.progress++;
+            document.getElementById("balanceTop").textContent = user.balance + " ₽";
+            renderTasks();
+            Telegram.WebApp.showAlert(`✅ Лайк подтверждён! +${t.reward} ₽`);
+          }, 3000);
         }
       });
     }
 
-    // --- Видео (кастомный плеер, без перемотки) ---
+    // --- Видео (без изменений) ---
     function startVideoTask(id) {
       const t = tasks.find(x => x.id === id);
       if (!t || t.progress >= t.max || videoModalActive) return;
 
       videoModalActive = true;
-
-      // Создаём модальное окно для видео
       const overlay = document.getElementById('modalOverlay');
-      overlay.innerHTML = ''; // очищаем
-
+      overlay.innerHTML = '';
       const videoModal = document.createElement('div');
       videoModal.className = 'video-modal';
       videoModal.innerHTML = `
@@ -434,16 +418,12 @@
       overlay.appendChild(videoModal);
       overlay.classList.remove('hidden');
 
-      // Получаем элемент видео и настраиваем события
       const video = document.getElementById('videoPlayer');
-      // Отключаем стандартные контролы и запрещаем перемотку через события
       video.controls = false;
       video.addEventListener('seeking', () => {
-        // Если попытались перемотать, возвращаем на предыдущую позицию
         video.currentTime = video.currentTime - 0.1;
       });
       video.addEventListener('ended', () => {
-        // Видео закончилось – начисляем бонус
         closeVideoModal(true, t);
       });
     }
@@ -451,21 +431,19 @@
     function closeVideoModal(giveReward = false, task = null) {
       const overlay = document.getElementById('modalOverlay');
       overlay.classList.add('hidden');
-      overlay.innerHTML = ''; // очищаем
+      overlay.innerHTML = '';
       videoModalActive = false;
 
       if (giveReward && task) {
-        // Начисляем награду
         user.balance += task.reward;
         task.progress++;
         document.getElementById("balanceTop").textContent = user.balance + " ₽";
-        saveData();
         renderTasks();
         Telegram.WebApp.showAlert(`✅ Видео просмотрено! +${task.reward} ₽`);
       }
     }
 
-    // --- Рефералы (через бота) ---
+    // --- Рефералы (без изменений) ---
     function showReferral(id) {
       const t = tasks.find(x => x.id === id);
       if (!t || t.progress >= t.max) return;
@@ -493,7 +471,7 @@
       });
     }
 
-    // ==================== ВЫПЛАТЫ ====================
+    // ==================== ВЫПЛАТЫ (без изменений) ====================
     function renderPayouts() {
       const payoutsData = generatePayouts();
       document.getElementById("payouts").innerHTML = payoutsData.map(p => `
@@ -597,8 +575,6 @@
       if (sum > user.balance) { Telegram.WebApp.showAlert("Недостаточно средств"); return; }
       user.balance -= sum;
       document.getElementById("balanceTop").textContent = user.balance + " ₽";
-      saveData();
-      // ИЗМЕНЁННЫЙ ТЕКСТ:
       Telegram.WebApp.showAlert(`✅ Заявка на выплату отправлена! 💸`);
       closeAllModals();
     }
@@ -609,7 +585,8 @@
         Telegram.WebApp.ready();
         Telegram.WebApp.expand();
       }
-      loadData();
+      // Загружаем только имя из Telegram, баланс всегда 0
+      loadUserFromTelegram();
       setupWebAppDataHandler();
       renderPayouts();
       renderTasks();
