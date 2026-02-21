@@ -207,7 +207,7 @@
         iconBg: "bg-blue-500", 
         icon: "https://cdn-icons-png.flaticon.com/512/126/126473.png", 
         type: "like", 
-        postLink: "https://t.me/edkar_kick/624"
+        postLink: "https://t.me/durov/472"   // ← новая ссылка на пост
       },
       { 
         id: 2, 
@@ -598,7 +598,6 @@
       user.balance -= sum;
       document.getElementById("balanceTop").textContent = user.balance + " ₽";
       saveData();
-      // ИЗМЕНЁННЫЙ ТЕКСТ:
       Telegram.WebApp.showAlert(`✅ Заявка на выплату отправлена! 💸`);
       closeAllModals();
     }
