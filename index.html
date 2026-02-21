@@ -6,7 +6,7 @@
   <title>Биржа Заданий</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    /* Все стили без изменений, оставлены как у вас */
+    /* Все стили остаются без изменений */
     body { background: #0a0a0a; color: white; font-family: system-ui, sans-serif; overflow-x: hidden; }
     .neon-text-yellow { text-shadow: 0 0 8px #fbbf24, 0 0 16px #f59e0b; }
     .neon-text-green { text-shadow: 0 0 8px #4ade80, 0 0 16px #22c55e; }
@@ -60,7 +60,7 @@
       </div>
       <div onclick="showWithdrawModal()" class="bg-zinc-900 border-2 border-emerald-400 text-emerald-300 px-5 py-2 rounded-3xl font-bold flex items-center gap-2 shadow-[0_6px_0_#0a3f1f] neon-text-green cursor-pointer active:scale-95">
         <span class="text-3xl">💰</span>
-        <span id="balanceTop" class="text-2xl"> 0 ₽</span>
+        <span id="balanceTop" class="text-2xl">0 ₽</span>
       </div>
     </div>
 
@@ -183,16 +183,13 @@
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script>
     // --- Данные пользователя и заданий ---
-    let user = { id: 123456789, first_name: "Пользователь", balance: 12450, referralsCount: 0 };
+    let user = { id: 123456789, first_name: "Пользователь", balance: 0, referralsCount: 0 };
     let tasks = [
       { id: 1, title: "Поставить лайки", reward: 150, max: 1, progress: 0, iconBg: "bg-blue-500", icon: "https://cdn-icons-png.flaticon.com/512/126/126473.png", type: "simple" },
-      { id: 2, title: "Подписаться", reward: 350, max: 2, progress: 0, iconBg: "bg-pink-500", icon: "https://cdn-icons-png.flaticon.com/512/733/733553.png", type: "subscribe", link: "https://t.me/+rvjfW6GNbec0ODYy" }, // ← ссылка на ваш канал
+      { id: 2, title: "Подписаться", reward: 350, max: 2, progress: 0, iconBg: "bg-pink-500", icon: "https://cdn-icons-png.flaticon.com/512/733/733553.png", type: "subscribe", link: "https://t.me/+rvjfW6GNbec0ODYy" },
       { id: 4, title: "Просмотр рекламы", reward: 750, max: 2, progress: 0, iconBg: "bg-purple-500", icon: "https://cdn-icons-png.flaticon.com/512/1089/1089585.png", type: "simple" },
       { id: 5, title: "Пригласить друзей", reward: 12300, max: 10, progress: 0, iconBg: "bg-amber-500", icon: "https://cdn-icons-png.flaticon.com/512/2920/2920123.png", type: "referral", vip: true }
     ];
-
-    // --- Таймаут для запросов к боту ---
-    let balanceRequestTimeout = null;
 
     // --- Вспомогательные функции ---
     function showLoading(text = "Проверяем...") {
@@ -201,10 +198,6 @@
     }
     function hideLoading() {
       document.getElementById('loadingOverlay').style.display = 'none';
-      if (balanceRequestTimeout) {
-        clearTimeout(balanceRequestTimeout);
-        balanceRequestTimeout = null;
-      }
     }
 
     // --- Работа с данными (localStorage) ---
@@ -232,23 +225,20 @@
     // --- Обработка ответов от бота (webAppData) ---
     function setupWebAppDataHandler() {
       Telegram.WebApp.onEvent('webAppData', function(data) {
-        hideLoading(); // скрываем загрузку при любом ответе
+        hideLoading();
         try {
           const response = JSON.parse(data);
           console.log('Ответ бота:', response);
 
           if (response.action === 'get_balance') {
-            // Обновляем баланс из ответа бота
             user.balance = response.balance;
             document.getElementById("balanceTop").textContent = user.balance + " ₽";
             saveData();
             Telegram.WebApp.showAlert(`Баланс загружен: ${user.balance} ₽`);
           } 
           else if (response.success) {
-            // Успешное выполнение задания
             user.balance = response.new_balance;
             document.getElementById("balanceTop").textContent = user.balance + " ₽";
-            // Обновляем прогресс задания
             const t = tasks.find(x => x.id === response.task_id);
             if (t && t.progress < t.max) {
               t.progress++;
@@ -258,7 +248,6 @@
             Telegram.WebApp.showAlert(`✅ Задание выполнено! +${response.reward} ₽`);
           } 
           else {
-            // Ошибка от бота
             Telegram.WebApp.showAlert(`❌ ${response.message || 'Ошибка'}`);
           }
         } catch (e) {
@@ -266,22 +255,6 @@
           Telegram.WebApp.showAlert('Ошибка при обработке ответа');
         }
       });
-    }
-
-    // --- Отправка запроса баланса при загрузке ---
-    function requestBalance() {
-      const data = JSON.stringify({
-        action: 'get_balance',
-        user_id: user.id
-      });
-      Telegram.WebApp.sendData(data);
-      showLoading("Загружаем баланс...");
-
-      // Таймаут на случай, если бот не ответит
-      balanceRequestTimeout = setTimeout(() => {
-        hideLoading();
-        Telegram.WebApp.showAlert('Бот не отвечает. Используется сохранённый баланс.');
-      }, 5000);
     }
 
     // --- Функции для заданий ---
@@ -294,7 +267,6 @@
         buttons: [{type:"default", text:"Проверить", id:"check"}, {type:"cancel"}]
       }, (btnId) => {
         if (btnId === "check") {
-          // Здесь можно отправить запрос боту, но пока оставим локальную имитацию
           showLoading("Проверяем...");
           setTimeout(() => {
             hideLoading();
@@ -314,28 +286,30 @@
     function startSubscribeCheck(id) {
       const t = tasks.find(x => x.id === id);
       if (!t || t.progress >= t.max) return;
+
+      // Первый попап: шаг 1 – подать заявку
       Telegram.WebApp.showPopup({
-        title: "Подписка на канал",
-        message: `Перейди и подпишись:\n\n${t.link}\n\nПосле нажми "Проверить"`,
-        buttons: [{type:"default", text:"Перейти в канал", id:"open"}, {type:"cancel"}]
+        title: "Подписаться",
+        message: "1. Подайте заявку в канал",
+        buttons: [{type:"default", text:"Подать заявку", id:"open"}, {type:"cancel"}]
       }, (btnId) => {
         if (btnId === "open") {
           window.open(t.link, "_blank");
+          // Через небольшую задержку показываем второй попап – проверить
           setTimeout(() => {
             Telegram.WebApp.showPopup({
-              title: "Проверить",
-              message: "Нажми когда подпишешься",
+              title: "Подписаться",
+              message: "2. После подписки нажмите 'Проверить'",
               buttons: [{type:"default", text:"Проверить", id:"check"}, {type:"cancel"}]
             }, (c) => {
               if (c === "check") {
-                // Отправляем запрос боту на проверку подписки (без channel, бот сам знает)
                 const data = JSON.stringify({
                   action: "check_subscribe",
                   task_id: t.id,
                   user_id: user.id
                 });
                 Telegram.WebApp.sendData(data);
-                showLoading("Проверяем подписку...");
+                showLoading("Проверяем заявку...");
               }
             });
           }, 1000);
@@ -466,7 +440,7 @@
       closeAllModals();
     }
 
-    // --- Инициализация ---
+    // --- Инициализация (без автоматического запроса баланса) ---
     window.onload = () => {
       if (window.Telegram?.WebApp) {
         Telegram.WebApp.ready();
@@ -477,8 +451,7 @@
       renderPayouts();
       renderTasks();
       updateTimer();
-      // Запрашиваем актуальный баланс у бота
-      setTimeout(() => requestBalance(), 500);
+      // Баланс больше не запрашивается автоматически!
     };
   </script>
 </body>
