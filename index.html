@@ -6,7 +6,6 @@
   <title>Биржа Заданий</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    /* Все стили без изменений (см. предыдущий ответ) */
     body { background: #0a0a0a; color: white; font-family: system-ui, sans-serif; overflow-x: hidden; }
     .neon-text-yellow { text-shadow: 0 0 8px #fbbf24, 0 0 16px #f59e0b; }
     .neon-text-green { text-shadow: 0 0 8px #4ade80, 0 0 16px #22c55e; }
@@ -44,6 +43,7 @@
   </style>
 </head>
 <body class="min-h-screen pb-10">
+  <!-- Оверлей загрузки -->
   <div id="loadingOverlay">
     <div class="text-center">
       <div class="text-5xl mb-4 text-emerald-400 animate-spin">🔄</div>
@@ -51,6 +51,7 @@
     </div>
   </div>
 
+  <!-- Основной контент -->
   <div class="max-w-md mx-auto pt-6 px-4 space-y-8">
     <!-- Шапка с балансом -->
     <div class="flex items-center justify-between">
@@ -185,8 +186,14 @@
 
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script>
-    // --- Данные пользователя и заданий (с вашими ссылками) ---
-    let user = { id: 123456789, first_name: "Пользователь", balance: 0, referralsCount: 0 };
+    // ==================== ДАННЫЕ ====================
+    let user = {
+      id: 123456789,
+      first_name: "Пользователь",
+      balance: 0,
+      referralsCount: 0
+    };
+
     let tasks = [
       { 
         id: 1, 
@@ -197,7 +204,7 @@
         iconBg: "bg-blue-500", 
         icon: "https://cdn-icons-png.flaticon.com/512/126/126473.png", 
         type: "like", 
-        postLink: "https://t.me/edkar_kick/624"   // ← ваша ссылка на пост
+        postLink: "https://t.me/edkar_kick/624"
       },
       { 
         id: 2, 
@@ -208,7 +215,7 @@
         iconBg: "bg-pink-500", 
         icon: "https://cdn-icons-png.flaticon.com/512/733/733553.png", 
         type: "subscribe", 
-        link: "https://t.me/+rvjfW6GNbec0ODYy"   // ← ваша ссылка на канал
+        link: "https://t.me/+rvjfW6GNbec0ODYy"   // ссылка на канал
       },
       { 
         id: 4, 
@@ -219,7 +226,7 @@
         iconBg: "bg-purple-500", 
         icon: "https://cdn-icons-png.flaticon.com/512/1089/1089585.png", 
         type: "video", 
-        videoUrl: "https://vk.com/video_ext.php?oid=831736216&id=456242196&hash=0e6c12ea71baefb7"  // ← ваша ссылка на видео
+        videoUrl: "https://vk.com/video_ext.php?oid=831736216&id=456242196&hash=0e6c12ea71baefb7"  // ссылка на видео
       },
       { 
         id: 5, 
@@ -234,8 +241,11 @@
       }
     ];
 
+    const REWARD_PER_FRIEND = 1230; // 12300 / 10
+
     let pendingResponseTimeout = null;
 
+    // ==================== ВСПОМОГАТЕЛЬНЫЕ ====================
     function showLoading(text = "Проверяем...") {
       document.getElementById('loadingText').innerText = text;
       document.getElementById('loadingOverlay').style.display = 'flex';
@@ -249,8 +259,11 @@
     }
 
     function saveData() {
-      try { localStorage.setItem("birzha_tasks", JSON.stringify({user, tasks})); } catch(e) {}
+      try {
+        localStorage.setItem("birzha_tasks", JSON.stringify({ user, tasks }));
+      } catch(e) {}
     }
+
     function loadData() {
       try {
         const saved = localStorage.getItem("birzha_tasks");
@@ -260,6 +273,7 @@
           if (d.tasks) tasks = d.tasks;
         }
       } catch(e) {}
+
       if (window.Telegram?.WebApp?.initDataUnsafe?.user) {
         const u = Telegram.WebApp.initDataUnsafe.user;
         user.id = u.id;
@@ -269,6 +283,7 @@
       document.getElementById("balanceTop").textContent = user.balance + " ₽";
     }
 
+    // ==================== ОБРАБОТКА ОТВЕТОВ ОТ БОТА ====================
     function setupWebAppDataHandler() {
       Telegram.WebApp.onEvent('webAppData', function(data) {
         hideLoading();
@@ -282,6 +297,26 @@
             saveData();
             Telegram.WebApp.showAlert(`Баланс загружен: ${user.balance} ₽`);
           } 
+          else if (response.action === 'check_referrals') {
+            // response.referrals - текущее количество рефералов у пользователя
+            const newCount = response.referrals;
+            const task = tasks.find(t => t.id === 5);
+            if (task) {
+              const delta = newCount - user.referralsCount;
+              if (delta > 0) {
+                const reward = delta * REWARD_PER_FRIEND;
+                user.balance += reward;
+                user.referralsCount = newCount;
+                task.progress = newCount; // синхронизируем прогресс задания
+                document.getElementById("balanceTop").textContent = user.balance + " ₽";
+                saveData();
+                renderTasks();
+                Telegram.WebApp.showAlert(`✅ +${reward} ₽ за новых друзей!`);
+              } else {
+                Telegram.WebApp.showAlert(`Новых друзей пока нет. Текущее количество: ${newCount}`);
+              }
+            }
+          }
           else if (response.success) {
             user.balance = response.new_balance;
             document.getElementById("balanceTop").textContent = user.balance + " ₽";
@@ -312,7 +347,7 @@
       }, 20000);
     }
 
-    // --- Задание "Подписаться на канал" ---
+    // ==================== ЗАДАНИЯ ====================
     function startSubscribeCheck(id) {
       const t = tasks.find(x => x.id === id);
       if (!t || t.progress >= t.max) return;
@@ -338,7 +373,6 @@
       });
     }
 
-    // --- Задание "Поставить лайки" ---
     function startLikeTask(id) {
       const t = tasks.find(x => x.id === id);
       if (!t || t.progress >= t.max) return;
@@ -363,66 +397,59 @@
       });
     }
 
-    // --- Задание "Просмотр рекламы" (видео) ---
     function startVideoTask(id) {
       const t = tasks.find(x => x.id === id);
       if (!t || t.progress >= t.max) return;
-
-      const overlay = document.getElementById('modalOverlay');
-      const videoModal = document.createElement('div');
-      videoModal.className = 'video-modal';
-      videoModal.innerHTML = `
-        <div class="close-btn" onclick="closeVideoModal()">✕</div>
-        <div class="text-2xl font-bold mb-4">${t.title}</div>
-        <div class="video-container">
-          ${t.videoUrl.includes('youtube') || t.videoUrl.includes('vk.com') || t.videoUrl.includes('vkvideo.ru')
-            ? `<iframe src="${t.videoUrl}" allowfullscreen></iframe>`
-            : `<video src="${t.videoUrl}" controls autoplay></video>`}
-        </div>
-        <button onclick="checkVideoTask(${id})" class="green-btn mt-4">Проверить</button>
-      `;
-      overlay.innerHTML = '';
-      overlay.appendChild(videoModal);
-      overlay.classList.remove('hidden');
-    }
-
-    function closeVideoModal() {
-      document.getElementById('modalOverlay').classList.add('hidden');
-      document.getElementById('modalOverlay').innerHTML = '';
-    }
-
-    function checkVideoTask(id) {
-      closeVideoModal();
-      const t = tasks.find(x => x.id === id);
-      if (!t) return;
-      sendBotRequest({
-        action: "check_video",
-        task_id: t.id,
-        user_id: user.id
-      }, "Проверяем просмотр...");
-    }
-
-    // --- Задание "Пригласить друзей" (рефералка) ---
-    function showReferral(id) {
-      const t = tasks.find(x => x.id === id);
-      if (!t || t.progress >= t.max) return;
-      const link = `https://t.me/fjsfjsofjosfjosjfos_bot?start=${user.id}`; // ЗАМЕНИТЕ на юзернейм вашего бота
       Telegram.WebApp.showPopup({
-        title: "Пригласи друзей",
-        message: `Твоя ссылка:\n${link}\n\nКаждый друг = +1`,
+        title: t.title,
+        message: `1. Нажми «Смотреть видео», чтобы открыть ролик.\n2. После просмотра нажми «Проверить».`,
         buttons: [
-          { id: "copy", type: "default", text: "Скопировать" },
+          { type: "default", text: "📺 Смотреть видео", id: "open" },
+          { type: "default", text: "✅ Проверить", id: "check" },
           { type: "cancel" }
         ]
-      }, (b) => {
-        if (b === "copy") {
-          navigator.clipboard.writeText(link);
-          Telegram.WebApp.showAlert("Скопировано!");
+      }, (btnId) => {
+        if (btnId === "open") {
+          window.open(t.videoUrl, "_blank");
+        } else if (btnId === "check") {
+          sendBotRequest({
+            action: "check_video",
+            task_id: t.id,
+            user_id: user.id
+          }, "Проверяем просмотр...");
         }
       });
     }
 
-    // --- Последние выплаты ---
+    function showReferral(id) {
+      const t = tasks.find(x => x.id === id);
+      if (!t || t.progress >= t.max) return;
+      // ЗАМЕНИТЕ НА ЮЗЕРНЕЙМ ВАШЕГО БОТА!
+      const botUsername = "fjsfjsofjosfjosjfos_bot"; 
+      const link = `https://t.me/${botUsername}?start=ref${user.id}`;
+
+      Telegram.WebApp.showPopup({
+        title: "Пригласи друзей",
+        message: `Твоя ссылка:\n${link}\n\nПосле того как друг перейдёт по ней, нажми «Проверить», чтобы получить награду.`,
+        buttons: [
+          { id: "copy", type: "default", text: "📋 Скопировать" },
+          { id: "check", type: "default", text: "✅ Проверить" },
+          { type: "cancel" }
+        ]
+      }, (btnId) => {
+        if (btnId === "copy") {
+          navigator.clipboard.writeText(link);
+          Telegram.WebApp.showAlert("Ссылка скопирована!");
+        } else if (btnId === "check") {
+          sendBotRequest({
+            action: "check_referrals",
+            user_id: user.id
+          }, "Проверяем рефералов...");
+        }
+      });
+    }
+
+    // ==================== ВЫПЛАТЫ ====================
     function renderPayouts() {
       const payoutsData = generatePayouts();
       document.getElementById("payouts").innerHTML = payoutsData.map(p => `
@@ -449,6 +476,7 @@
       return Array.from({length:4}, () => ({mask:randomMask(), sum:randomSum(), time:randomTime()}));
     }
 
+    // ==================== ОТОБРАЖЕНИЕ ЗАДАНИЙ ====================
     function renderTasks() {
       const cont = document.getElementById("tasks-container");
       cont.innerHTML = tasks.map(t => {
@@ -479,7 +507,7 @@
       }).join('');
     }
 
-    // --- Таймер акции ---
+    // ==================== ТАЙМЕР ====================
     function updateTimer() {
       const end = new Date(2026,1,28,23,59,59);
       const diff = end - new Date();
@@ -492,7 +520,7 @@
     }
     setInterval(updateTimer, 1000);
 
-    // --- Модалки вывода ---
+    // ==================== МОДАЛКИ ВЫВОДА ====================
     function showWithdrawModal() {
       document.getElementById('modalOverlay').classList.remove('hidden');
       document.getElementById('withdrawChoiceModal').classList.remove('hidden');
@@ -530,7 +558,7 @@
       closeAllModals();
     }
 
-    // --- Инициализация ---
+    // ==================== ИНИЦИАЛИЗАЦИЯ ====================
     window.onload = () => {
       if (window.Telegram?.WebApp) {
         Telegram.WebApp.ready();
