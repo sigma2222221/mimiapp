@@ -6,6 +6,7 @@
   <title>Биржа Заданий</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
+    /* Все стили без изменений (см. предыдущий ответ) */
     body { background: #0a0a0a; color: white; font-family: system-ui, sans-serif; overflow-x: hidden; }
     .neon-text-yellow { text-shadow: 0 0 8px #fbbf24, 0 0 16px #f59e0b; }
     .neon-text-green { text-shadow: 0 0 8px #4ade80, 0 0 16px #22c55e; }
@@ -184,7 +185,7 @@
 
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script>
-    // --- Данные пользователя и заданий ---
+    // --- Данные пользователя и заданий (с вашими ссылками) ---
     let user = { id: 123456789, first_name: "Пользователь", balance: 0, referralsCount: 0 };
     let tasks = [
       { 
@@ -196,7 +197,7 @@
         iconBg: "bg-blue-500", 
         icon: "https://cdn-icons-png.flaticon.com/512/126/126473.png", 
         type: "like", 
-        postLink: "https://t.me/durov/123"  // ЗАМЕНИТЕ на реальный пост
+        postLink: "https://t.me/edkar_kick/624"   // ← ваша ссылка на пост
       },
       { 
         id: 2, 
@@ -207,7 +208,7 @@
         iconBg: "bg-pink-500", 
         icon: "https://cdn-icons-png.flaticon.com/512/733/733553.png", 
         type: "subscribe", 
-        link: "https://t.me/+rvjfW6GNbec0ODYy"   // ВАША ССЫЛКА НА КАНАЛ
+        link: "https://t.me/+rvjfW6GNbec0ODYy"   // ← ваша ссылка на канал
       },
       { 
         id: 4, 
@@ -218,7 +219,7 @@
         iconBg: "bg-purple-500", 
         icon: "https://cdn-icons-png.flaticon.com/512/1089/1089585.png", 
         type: "video", 
-        videoUrl: "https://vk.com/video_ext.php?oid=831736216&id=456242196&hash=0e6c12ea71baefb7"
+        videoUrl: "https://vk.com/video_ext.php?oid=831736216&id=456242196&hash=0e6c12ea71baefb7"  // ← ваша ссылка на видео
       },
       { 
         id: 5, 
@@ -302,17 +303,16 @@
       });
     }
 
-    // Отправка запроса боту с увеличенным таймаутом
     function sendBotRequest(data, loadingText = "Проверяем...") {
       Telegram.WebApp.sendData(JSON.stringify(data));
       showLoading(loadingText);
       pendingResponseTimeout = setTimeout(() => {
         hideLoading();
         Telegram.WebApp.showAlert('Бот не отвечает. Попробуйте позже.');
-      }, 20000); // 20 секунд
+      }, 20000);
     }
 
-    // --- Задание "Подписаться на канал" (НОВОЕ МЕНЮ) ---
+    // --- Задание "Подписаться на канал" ---
     function startSubscribeCheck(id) {
       const t = tasks.find(x => x.id === id);
       if (!t || t.progress >= t.max) return;
@@ -338,7 +338,7 @@
       });
     }
 
-    // --- Задание "Поставить лайки" (аналогичное меню) ---
+    // --- Задание "Поставить лайки" ---
     function startLikeTask(id) {
       const t = tasks.find(x => x.id === id);
       if (!t || t.progress >= t.max) return;
@@ -422,7 +422,7 @@
       });
     }
 
-    // --- Последние выплаты (рендер) ---
+    // --- Последние выплаты ---
     function renderPayouts() {
       const payoutsData = generatePayouts();
       document.getElementById("payouts").innerHTML = payoutsData.map(p => `
